@@ -193,9 +193,9 @@ function cardOf(s) {
 }
 
 /** A page as its layout reads it. */
-function pageOf(s) {
+function pageOf(s, card) {
   return {
-    ...cardOf(s),
+    ...card,
     slug: s.slug,
     content: s.html,
     toc: s.toc.map((h) => ({ level: h.level, id: h.id, html: h.html })),
@@ -216,7 +216,10 @@ function layouts(b) {
     const nodes = b.templates.get(name);
     return nodes === undefined ? null : renderNodes(nodes, { vars: { site, tags: allTags, recent, ...vars }, parent: null }, ctx, 0);
   };
-  for (const s of b.sources) b.output[`${s.outDir}/index.html`] = render(s.layout, { page: pageOf(s) });
+  for (const s of b.sources) {
+    const card = s.post ? b.cards.get(s) : cardOf(s);
+    b.output[`${s.outDir}/index.html`] = render(s.layout, { page: pageOf(s, card) });
+  }
   const per = b.input.site.per_page;
   const pages = Math.max(1, Math.ceil(b.posts.length / per));
   const indexUrl = (k) => (k === 1 ? `${b.base}/` : `${b.base}/page/${k}/`);

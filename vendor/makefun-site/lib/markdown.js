@@ -127,18 +127,9 @@ function findSingleStar(s, from) {
   return -1;
 }
 
-/** `s` rendered inline; `env.link(target)` is a link's href. */
-function pushEscaped(out, text) {
-  let last = 0, m;
-  ESCAPE_RE.lastIndex = 0;
-  while ((m = ESCAPE_RE.exec(text)) !== null) {
-    if (m.index > last) out.push(text.slice(last, m.index));
-    out.push(ESCAPES[m[0]]);
-    last = m.index + 1;
-  }
-  if (last < text.length) out.push(text.slice(last));
-}
+const INLINE_SPECIAL = /[\\`*[]/;
 export function inline(s, env) {
+  if (!INLINE_SPECIAL.test(s)) return escapeHtml(s);
   let out = '';
   let start = 0;
   let i = 0;

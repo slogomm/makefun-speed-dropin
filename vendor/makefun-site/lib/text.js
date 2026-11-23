@@ -2,10 +2,13 @@
 
 /** The HTML escape table, in this order: & < > " ' (README.md). */
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const ESCAPE_TEST = /[&<>"']/;
+const ESCAPE_REPLACE = /[&<>"']/g;
+const escapeReplacer = (c) => ESCAPES[c];
 
 /** `text` with & < > " and ' escaped. */
 export function escapeHtml(text) {
-  return /[&<>"']/.test(text) ? text.replace(/[&<>"']/g, (c) => ESCAPES[c]) : text;
+  return ESCAPE_TEST.test(text) ? text.replace(ESCAPE_REPLACE, escapeReplacer) : text;
 }
 
 /** The most characters a slug keeps before a collision suffix. */

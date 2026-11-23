@@ -167,9 +167,14 @@ export function renderNodes(nodes, scope, ctx, depth) {
         const xs = lookup(scope, n.path);
         if (!Array.isArray(xs)) break;
         const last = xs.length - 1;
+        const loop = { index: 0, first: true, last: false, length: xs.length };
+        const vars = { loop };
+        vars[n.name] = undefined;
+        const child = { vars, parent: scope };
         for (let k = 0; k < xs.length; k++) {
-          const vars = { [n.name]: xs[k], loop: { index: k + 1, first: k === 0, last: k === last, length: xs.length } };
-          out += renderNodes(n.body, { vars, parent: scope }, ctx, depth);
+          vars[n.name] = xs[k];
+          loop.index = k + 1; loop.first = k === 0; loop.last = k === last;
+          out += renderNodes(n.body, child, ctx, depth);
         }
         break;
       }

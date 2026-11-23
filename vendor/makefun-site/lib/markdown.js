@@ -127,19 +127,21 @@ function findSingleStar(s, from) {
   return -1;
 }
 
-const INLINE_SPECIAL = /[\\`*[]/;
+const INLINE_SPECIAL = /[\\`*[]/g;
 export function inline(s, env) {
-  if (!INLINE_SPECIAL.test(s)) return escapeHtml(s);
   let out = '';
   let start = 0;
-  let i = 0;
   const n = s.length;
-  while (i < n) {
+  INLINE_SPECIAL.lastIndex = 0;
+  let m;
+  while ((m = INLINE_SPECIAL.exec(s)) !== null) {
+    const i = m.index;
     const c = s[i];
     if (c === '\\' && i + 1 < n && ESCAPABLE.has(s[i + 1])) {
       if (start < i) out += escapeHtml(s.slice(start, i));
       out += escapeHtml(s[i + 1]);
-      i += 2; start = i;
+      start = i + 2;
+      INLINE_SPECIAL.lastIndex = start;
       continue;
     }
     if (c === '`') {
@@ -147,8 +149,9 @@ export function inline(s, env) {
       if (j > i + 1) {
         if (start < i) out += escapeHtml(s.slice(start, i));
         out += '<code>' + escapeHtml(s.slice(i + 1, j)) + '</code>';
-        i = j + 1; start = i;
-      } else i++;
+        start = j + 1;
+        INLINE_SPECIAL.lastIndex = start;
+      }
       continue;
     }
     if (c === '*') {
@@ -157,32 +160,33 @@ export function inline(s, env) {
         if (j > i + 2) {
           if (start < i) out += escapeHtml(s.slice(start, i));
           out += '<strong>' + inline(s.slice(i + 2, j), env) + '</strong>';
-          i = j + 2; start = i;
-        } else i += 2;
+          start = j + 2;
+          INLINE_SPECIAL.lastIndex = start;
+        } else INLINE_SPECIAL.lastIndex = i + 2;
       } else {
         const j = findSingleStar(s, i + 1);
         if (j > i + 1) {
           if (start < i) out += escapeHtml(s.slice(start, i));
           out += '<em>' + inline(s.slice(i + 1, j), env) + '</em>';
-          i = j + 1; start = i;
-        } else i++;
+          start = j + 1;
+          INLINE_SPECIAL.lastIndex = start;
+        }
       }
       continue;
     }
     if (c === '[') {
       const k = findUnescaped(s, ']', i + 1);
-      const m = k !== -1 && s[k + 1] === '(' ? s.indexOf(')', k + 2) : -1;
-      const target = m === -1 ? '' : s.slice(k + 2, m);
+      const mm = k !== -1 && s[k + 1] === '(' ? s.indexOf(')', k + 2) : -1;
+      const target = mm === -1 ? '' : s.slice(k + 2, mm);
       if (target !== '' && !/\s/.test(target)) {
         if (start < i) out += escapeHtml(s.slice(start, i));
         out += '<a href="' + escapeHtml(env.link(target)) + '">' + inline(s.slice(i + 1, k), env) + '</a>';
-        i = m + 1; start = i;
+        start = mm + 1;
+        INLINE_SPECIAL.lastIndex = start;
         continue;
       }
-      i++;
       continue;
     }
-    i++;
   }
   if (start < n) out += escapeHtml(s.slice(start));
   return out;
